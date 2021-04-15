@@ -1,2 +1,2 @@
-# conn-ewallet-vietinbank
-Connect for ewallet service with VietinBank
+# conn-ewallet-vnpay
+Connect for ewallet service with vnpay
