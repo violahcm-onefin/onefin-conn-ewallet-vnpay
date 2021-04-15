@@ -11,10 +11,10 @@
 	</parent>
 
 	<groupId>com.onefin.bank</groupId>
-	<artifactId>conn-ewallet-vietinbank</artifactId>
+	<artifactId>conn-ewallet-VNPay</artifactId>
 	<version>1.0.0</version>
-	<name>Connector Ewallet VietinBank</name>
-	<description>Connector Ewallet VietinBank</description>
+	<name>Connector Ewallet VNPay</name>
+	<description>Connector Ewallet VNPay</description>
 	<properties>
 		<java.version>1.8</java.version>
 		<onefin-common.version>1.0.0</onefin-common.version>
