@@ -4,7 +4,7 @@ server:
 vnpay:
   onefinPrivateKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
   vnpayPublicKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
-  soapUrl: "dfdsf"
+  soapUrl: http://210.245.12.220:19061/VnTopupService/VnpSrv.asmx?WSDL
   partnerCode: ONEFIN
 
 logging:

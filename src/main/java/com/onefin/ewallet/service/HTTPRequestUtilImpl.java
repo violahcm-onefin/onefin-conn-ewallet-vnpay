@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -32,14 +33,11 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	@Autowired
 	private EncryptUtil encryptUtil;
 
-	private final VnpSrvSoap vnpaySoapWebService;
+	private VnpSrvSoap vnpaySoapWebService;
 
-	public HTTPRequestUtilImpl() throws MalformedURLException {
-		assert false;
-		configLoader = new ConfigLoader();
+	@PostConstruct
+	public void populateMovieCache() throws MalformedURLException {
 		String vnpayUrl = configLoader.getSoapUrl();
-		LOGGER.info(vnpayUrl);
-		LOGGER.info(vnpayUrl);
 		URL url = new URL(vnpayUrl);
 
 		//1st argument service URI, refer to wsdl document above
@@ -48,8 +46,6 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 
 		javax.xml.ws.Service service = javax.xml.ws.Service.create(url, qname);
 		vnpaySoapWebService = service.getPort(VnpSrvSoap.class);
-
-
 	}
 
 	private String vnpaySign(String input) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
