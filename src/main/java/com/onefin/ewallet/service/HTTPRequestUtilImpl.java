@@ -32,12 +32,14 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	@Autowired
 	private EncryptUtil encryptUtil;
 
-	private VnpSrvSoap vnpaySoapWebService;
+	private final VnpSrvSoap vnpaySoapWebService;
 
 	public HTTPRequestUtilImpl() throws MalformedURLException {
-		LOGGER.info("==============================");
 		assert false;
-		String vnpayUrl = configLoader.getOnefinPrivateKey();
+		configLoader = new ConfigLoader();
+		String vnpayUrl = configLoader.getSoapUrl();
+		LOGGER.info(vnpayUrl);
+		LOGGER.info(vnpayUrl);
 		URL url = new URL(vnpayUrl);
 
 		//1st argument service URI, refer to wsdl document above

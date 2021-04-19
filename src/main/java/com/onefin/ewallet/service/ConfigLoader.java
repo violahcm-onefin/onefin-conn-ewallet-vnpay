@@ -13,12 +13,15 @@ public class ConfigLoader {
 	@Value("${vnpay.onefinPrivateKey}")
 	private String onefinPrivateKey;
 
-	@Value("${vnpay.onefinPrivateKey}")
-	private String vtbPublicKey;
+	@Value("${vnpay.vnpayPublicKey}")
+	private String vnpayPublicKey;
+
+	@Value("${vnpay.soapUrl}")
+	private String soapUrl;
 
 	@Value("${vnpay.partnerCode}")
 	private String partnerCode;
 
-	@Value("${vnpay.vnpayPublicKey}")
-	private String vnpayPublicKey;
+
+
 }

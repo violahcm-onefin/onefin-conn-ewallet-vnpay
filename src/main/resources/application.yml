@@ -1,11 +1,10 @@
 server:
-  port: 8060
+  port: 8090
 
 vnpay:
   onefinPrivateKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
   vnpayPublicKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
-  version: 1.0
-  soapUrl: http://210.245.12.220:19061/VnTopupService/VnpSrv.asmx?WSDL
+  soapUrl: "dfdsf"
   partnerCode: ONEFIN
 
 logging:
