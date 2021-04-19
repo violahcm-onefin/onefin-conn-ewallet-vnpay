@@ -1,7 +1,7 @@
 package com.onefin.ewallet.service;
 
 import com.onefin.ewallet.model.OneFin_to_SoftSpace_TopupMobileResponse;
-import com.onefin.ewallet.model.VNPayConnResponse;
+import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,15 @@ public class MessageUtilImpl implements IMessageUtil {
 	private ConfigLoader configLoader;
 
 	@Override
-	public OneFin_to_SoftSpace_TopupMobileResponse build_OneFin_to_SoftSpace_TopupMobileResponse(String connectorCode, Object Res) {
+	public OneFin_to_SoftSpace_TopupMobileResponse build_OneFin_to_SoftSpace_TopupMobileResponse(TopupResponse data) {
 		OneFin_to_SoftSpace_TopupMobileResponse response = new OneFin_to_SoftSpace_TopupMobileResponse();
-//		response.setAmount();
-		response.setResponse(Res);
-		response.setVersion(configLoader.getVNPayVersion());
+		response.setRespCode(data.getTopupReturn().getRespCode());
+		response.setMobileNo(data.getTopupReturn().getMobileNo());
+		response.setAmount(data.getTopupReturn().getAmount());
+		response.setTrace(data.getTopupReturn().getTrace());
+		response.setLocalDateTime(data.getTopupReturn().getLocalDateTime());
+		response.setVnPayDateTime(data.getTopupReturn().getVnPayDateTime());
+		response.setPartnerCode(configLoader.getPartnerCode());
 		return response;
 	}
 

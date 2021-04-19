@@ -2,6 +2,8 @@ package com.onefin.ewallet.model;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class OneFin_to_SoftSpace_TopupMobileResponse {
 
@@ -9,10 +11,14 @@ public class OneFin_to_SoftSpace_TopupMobileResponse {
 
 	private String MobileNo;
 
-	private int Amount;
+	private BigDecimal Amount;
 
-	private int Trace;
+	private long Trace;
 
 	private String LocalDateTime;
+
+	private String VnPayDateTime;
+
+	private String PartnerCode;
 
 }

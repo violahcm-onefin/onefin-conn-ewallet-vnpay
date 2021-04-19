@@ -1,10 +1,7 @@
 package com.onefin.ewallet.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onefin.ewallet.common.EncryptUtil;
-import com.onefin.ewallet.common.OneFinConstants;
 import com.onefin.ewallet.model.SoftSpaceTopupMobileReq;
-import com.onefin.ewallet.model.VNPay_to_OneFin_TopupMobileResponse;
 import com.onefin.ewallet.vnpaySoapWebService.Topup;
 import com.onefin.ewallet.vnpaySoapWebService.TopupRequestType;
 import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
@@ -12,8 +9,6 @@ import com.onefin.ewallet.vnpaySoapWebService.VnpSrvSoap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.xml.namespace.QName;
@@ -40,6 +35,7 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	private VnpSrvSoap vnpaySoapWebService;
 
 	public HTTPRequestUtilImpl() throws MalformedURLException {
+		LOGGER.info("==============================");
 		assert false;
 		String vnpayUrl = configLoader.getOnefinPrivateKey();
 		URL url = new URL(vnpayUrl);
@@ -81,7 +77,7 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 		String signedData = vnpaySign(SignRawStr);
 		topupRequestType.setSign(signedData);
 
-		LOGGER.debug(String.format("signedData: %s", signedData);
+		LOGGER.debug("signedData: {}", signedData);
 //		======================================================
 
 		Topup topup = new Topup();
@@ -103,7 +99,7 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 
 		// validate signature
 		if (!verifyVNPaySignature(expectResponseSignStr, topupResponse.getTopupReturn().getSign())) {
-			LOGGER.error("== Verify signature fail");
+			LOGGER.error("== sendTopupMobile Verify signature fail");
 		}
 
 		return topupResponse;

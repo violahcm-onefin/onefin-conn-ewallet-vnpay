@@ -1,9 +1,10 @@
 package com.onefin.ewallet.service;
 
 import com.onefin.ewallet.model.*;
+import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
 
 public interface IHTTPRequestUtil {
 
-	VNPay_to_OneFin_TopupMobileResponse sendTopupMobile(SoftSpaceTopupMobileReq data) throws Exception;
+	TopupResponse sendTopupMobile(SoftSpaceTopupMobileReq data) throws Exception;
 
 }

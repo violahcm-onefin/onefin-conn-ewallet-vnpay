@@ -1,10 +1,10 @@
 package com.onefin.ewallet.controller;
 
-import com.onefin.ewallet.common.OneFinConstants;
-import com.onefin.ewallet.model.*;
+import com.onefin.ewallet.model.SoftSpaceTopupMobileReq;
 import com.onefin.ewallet.service.IHTTPRequestUtil;
 import com.onefin.ewallet.service.IMessageUtil;
 import com.onefin.ewallet.service.IVNpayService;
+import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import javax.validation.Valid;
 
 @Controller
 @Configuration
-@RequestMapping("/vnpay/airtime-topup")
+@RequestMapping("/airtimetopup-api-connector/rest/v1/ewallet/")
 public class VNPayController {
 
 	@Autowired
@@ -39,14 +39,10 @@ public class VNPayController {
 	@RequestMapping(method = RequestMethod.POST, value = "/topupmobile")
 	public @ResponseBody ResponseEntity<?> topupmobile(@Valid @RequestBody(required = true) SoftSpaceTopupMobileReq requestBody, HttpServletRequest request) throws Exception {
 
-		LOGGER.info("== RequestID {} - Send TokenIssue Request to VIETIN", requestBody.getRequestId());
-		try {
-			VNPay_to_OneFin_TopupMobileResponse response = IHTTPRequestUtil.sendTopupMobile(requestBody);
-		} catch (Exception e) {
-			LOGGER.error("== RequestID {} - Fail to process TokenIssue function: {}", requestBody.getRequestId(), e);
-			return new ResponseEntity<>(
-					imsgUtil.buildVietinConnectorResponse(OneFinConstants.INTERNAL_SERVER_ERROR, null), HttpStatus.OK);
-		}
+		TopupResponse response = IHTTPRequestUtil.sendTopupMobile(requestBody);
+
+		return new ResponseEntity<>(
+				imsgUtil.build_OneFin_to_SoftSpace_TopupMobileResponse(response), HttpStatus.OK);
 
 	}
 
