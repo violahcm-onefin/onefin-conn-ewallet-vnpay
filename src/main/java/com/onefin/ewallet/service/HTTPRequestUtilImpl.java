@@ -1,40 +1,30 @@
 package com.onefin.ewallet.service;
 
-import java.util.Collections;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onefin.ewallet.common.EncryptUtil;
+import com.onefin.ewallet.common.OneFinConstants;
+import com.onefin.ewallet.model.SoftSpaceTopupMobileReq;
+import com.onefin.ewallet.model.VNPay_to_OneFin_TopupMobileResponse;
+import com.onefin.ewallet.vnpaySoapWebService.Topup;
+import com.onefin.ewallet.vnpaySoapWebService.TopupRequestType;
+import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
+import com.onefin.ewallet.vnpaySoapWebService.VnpSrvSoap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onefin.ewallet.model.PaymentByOTP;
-import com.onefin.ewallet.model.PaymentByOTPResponse;
-import com.onefin.ewallet.model.PaymentByToken;
-import com.onefin.ewallet.model.PaymentByTokenResponse;
-import com.onefin.ewallet.model.ProviderInquiry;
-import com.onefin.ewallet.model.ProviderInquiryResponse;
-import com.onefin.ewallet.model.RegisterOnlinePay;
-import com.onefin.ewallet.model.RegisterOnlinePayResponse;
-import com.onefin.ewallet.model.TokenIssue;
-import com.onefin.ewallet.model.TokenIssuePayment;
-import com.onefin.ewallet.model.TokenIssuePaymentResponse;
-import com.onefin.ewallet.model.TokenIssueResponse;
-import com.onefin.ewallet.model.TokenReIssueResponse;
-import com.onefin.ewallet.model.TokenRevokeReIssue;
-import com.onefin.ewallet.model.TokenRevokeResponse;
-import com.onefin.ewallet.model.TransactionInquiry;
-import com.onefin.ewallet.model.TransactionInquiryResponse;
-import com.onefin.ewallet.model.VerifyPin;
-import com.onefin.ewallet.model.VerifyPinResponse;
-import com.onefin.ewallet.model.Withdraw;
-import com.onefin.ewallet.model.WithdrawResponse;
+import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 
 @Service
 public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
@@ -44,323 +34,80 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	@Autowired
 	private ConfigLoader configLoader;
 
-	@Override
-	public TokenIssueResponse sendTokenIssue(TokenIssue data) throws Exception {
-		String url = configLoader.getTokenIssue();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), TokenIssueResponse.class);
+	@Autowired
+	private EncryptUtil encryptUtil;
 
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
+	private VnpSrvSoap vnpaySoapWebService;
+
+	public HTTPRequestUtilImpl() throws MalformedURLException {
+		assert false;
+		String vnpayUrl = configLoader.getOnefinPrivateKey();
+		URL url = new URL(vnpayUrl);
+
+		//1st argument service URI, refer to wsdl document above
+		//2nd argument is service name, refer to wsdl document above
+		QName qname = new QName("http://www.vnpay.vn/VnTopup/", "VnpSrv");
+
+		javax.xml.ws.Service service = javax.xml.ws.Service.create(url, qname);
+		vnpaySoapWebService = service.getPort(VnpSrvSoap.class);
+
+
+	}
+
+	private String vnpaySign(String input) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+		PrivateKey privateKeyOneFin = encryptUtil.readPrivateKey(configLoader.getOnefinPrivateKey());
+		String signedData = encryptUtil.sign(input, privateKeyOneFin);
+		return signedData;
+	}
+
+	private boolean verifyVNPaySignature(String data, String signature) throws CertificateException, IOException {
+		PublicKey publicKeyVietin = encryptUtil.readPublicKey2(configLoader.getVnpayPublicKey());
+		return encryptUtil.verifySignature(data, signature, publicKeyVietin);
 	}
 
 	@Override
-	public RegisterOnlinePayResponse sendRegisterOnlinePay(RegisterOnlinePay data) throws Exception {
-		String url = configLoader.getRegisterOnlinePay();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), RegisterOnlinePayResponse.class);
+	public TopupResponse sendTopupMobile(SoftSpaceTopupMobileReq data) throws Exception {
+		TopupRequestType topupRequestType = new TopupRequestType();
 
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
+		topupRequestType.setMobileNo(data.getMobileNo());
+		topupRequestType.setAmount(data.getAmount());
+		topupRequestType.setTrace(data.getTrace());
+		topupRequestType.setLocalDateTime(data.getLocalDateTime());
+		topupRequestType.setPartnerCode(configLoader.getPartnerCode());
+
+//		======================================================
+		String SignRawStr = String.format("%s-%d-%d-%s-%s", data.getMobileNo(), data.getAmount(), data.getTrace(), data.getLocalDateTime(), configLoader.getPartnerCode());
+
+		String signedData = vnpaySign(SignRawStr);
+		topupRequestType.setSign(signedData);
+
+		LOGGER.debug(String.format("signedData: %s", signedData);
+//		======================================================
+
+		Topup topup = new Topup();
+		topup.setTopupRequest(topupRequestType);
+
+		TopupResponse topupResponse = vnpaySoapWebService.topupMobile(topup);
+
+		LOGGER.debug("TopupMobile getRespCode: {}", topupResponse.getTopupReturn().getRespCode());
+		String expectResponseSignStr = String.format(
+		        "%s-%s-%s-%s-%s-%s-%s",
+				topupResponse.getTopupReturn().getRespCode(),
+				topupResponse.getTopupReturn().getMobileNo(),
+				topupResponse.getTopupReturn().getTrace(),
+				topupResponse.getTopupReturn().getBalance(),
+				topupResponse.getTopupReturn().getAmount(),
+				topupResponse.getTopupReturn().getLocalDateTime(),
+				topupResponse.getTopupReturn().getVnPayDateTime()
+        );
+
+		// validate signature
+		if (!verifyVNPaySignature(expectResponseSignStr, topupResponse.getTopupReturn().getSign())) {
+			LOGGER.error("== Verify signature fail");
 		}
+
+		return topupResponse;
 	}
 
-	@Override
-	public VerifyPinResponse sendVerifyPin(VerifyPin data) throws Exception {
-		String url = configLoader.getVerifyPin();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), VerifyPinResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public TokenRevokeResponse sendTokenRevoke(TokenRevokeReIssue data) throws Exception {
-		String url = configLoader.getTokenRevoke();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), TokenRevokeResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public TokenReIssueResponse sendTokenReIssue(TokenRevokeReIssue data) throws Exception {
-		String url = configLoader.getTokenReissue();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), TokenReIssueResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public PaymentByTokenResponse sendPaymentByToken(PaymentByToken data) throws Exception {
-		String url = configLoader.getPaymentByToken();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), PaymentByTokenResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public PaymentByOTPResponse sendPaymentByOTP(PaymentByOTP data) throws Exception {
-		String url = configLoader.getPaymentByOTP();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), PaymentByOTPResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public WithdrawResponse sendWithdraw(Withdraw data) throws Exception {
-		String url = configLoader.getWidthdraw();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), WithdrawResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public TransactionInquiryResponse sendTransactionInquiry(TransactionInquiry data) throws Exception {
-		String url = configLoader.getTransactionInquiry();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), TransactionInquiryResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public ProviderInquiryResponse sendProviderInquiry(ProviderInquiry data) throws Exception {
-		String url = configLoader.getProviderInquiry();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), ProviderInquiryResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
-
-	@Override
-	public TokenIssuePaymentResponse sendTokenIssuePayment(TokenIssuePayment data) throws Exception {
-		String url = configLoader.getTokenIssuePayment();
-		LOGGER.info("== Send request to VIETIN {} ", url);
-		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("x-ibm-client-id", configLoader.getIbmClientId());
-		headers.add("x-ibm-client-secret", configLoader.getXIbmClientSecret());
-		RestTemplate restTemplate = new RestTemplate();
-		HttpEntity entity = new HttpEntity(data, headers);
-		ResponseEntity<String> resp = null;
-		try {
-			resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-		} catch (Exception e) {
-			LOGGER.error("== Error response from VIETIN!!! - {}", e);
-			return null;
-		}
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info("== Response - " + resp.getBody());
-			return mapper.readValue(resp.getBody(), TokenIssuePaymentResponse.class);
-
-		} catch (Exception e) {
-			LOGGER.error("== Can't parse result from VIETIN!!! - {}", e);
-			return null;
-		}
-	}
 
 }
