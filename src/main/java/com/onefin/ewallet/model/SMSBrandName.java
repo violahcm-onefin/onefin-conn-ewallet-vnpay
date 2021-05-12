@@ -1,6 +1,7 @@
 package com.onefin.ewallet.model;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import lombok.Data;
@@ -26,14 +27,14 @@ public class SMSBrandName {
 
 	private String encryptMessage;
 
-	@NotEmpty(message = "Not empty")
-	private int isEncrypt;
+	@NotNull(message = "Not empty")
+	private Integer isEncrypt;
 
-	@NotEmpty(message = "Not empty")
-	private int type;
+	@NotNull(message = "Not empty")
+	private Integer type;
 
-	@NotEmpty(message = "Not empty")
-	private long requestTime;
+	@NotNull(message = "Not empty")
+	private Long requestTime;
 
 	private String partnerCode;
 
