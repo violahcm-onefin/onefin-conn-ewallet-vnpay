@@ -23,7 +23,7 @@ import javax.validation.Valid;
 @Controller
 @Configuration
 @RequestMapping("/airtimetopup-api-connector/rest/v1/ewallet/")
-public class VNPayController {
+public class VNPayAirtimeController {
 
 	@Autowired
 	public IVNpayService IVNpayService;
@@ -34,7 +34,7 @@ public class VNPayController {
 	@Autowired
 	private IHTTPRequestUtil IHTTPRequestUtil;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(VNPayController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(VNPayAirtimeController.class);
 
 	@RequestMapping(method = RequestMethod.POST, value = "/topupmobile")
 	public @ResponseBody ResponseEntity<?> topupmobile(@Valid @RequestBody(required = true) SoftSpaceTopupMobileReq requestBody, HttpServletRequest request) throws Exception {

@@ -1,17 +1,13 @@
 package com.onefin.ewallet.service;
 
+import com.onefin.ewallet.model.EwalletTransaction;
+import com.onefin.ewallet.model.SMSBrandName;
 import com.onefin.service.IBaseService;
 
 public interface IVNpayService extends IBaseService {
 
-	/**
-	 * Validate response from VTB
-	 * 
-	 * @param responseObj
-	 * @param language
-	 * @return
-	 */
-//	public ResponseEntity<?> validateResponse(Object data);
+	SMSBrandName buildSMSBrandName(SMSBrandName data);
 
+	EwalletTransaction save(EwalletTransaction transData) throws Exception;
 
 }

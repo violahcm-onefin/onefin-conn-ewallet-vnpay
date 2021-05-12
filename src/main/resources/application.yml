@@ -2,11 +2,20 @@ server:
   port: 8090
 
 vnpay:
-  onefinPrivateKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
-  vnpayPublicKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
-  soapUrl: http://210.245.12.220:19061/VnTopupService/VnpSrv.asmx?WSDL
-  partnerCode: ONEFIN
+  airtimeTopup:
+    onefinPrivateKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
+    vnpayPublicKey: C:\Users\dcu\Documents\Projects\OneFin\Sources\conn-ewallet-vnpay\src\main\resources\keys\onefin_privatekey.der
+    soapUrl: http://210.245.12.220:19061/VnTopupService/VnpSrv.asmx?WSDL
+    partnerCode: ONEFIN
+  smsBrandName:
+    url:  https://smsgw.vnpaytest.vn/smsgw/sendSms
+    partnerCode: 950050
+    sercretKey: eb5193b6-ff01-401d-922f-2c431cf8344b
+    keyword: ONEFIN
+    brandname: VNPAY
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: info

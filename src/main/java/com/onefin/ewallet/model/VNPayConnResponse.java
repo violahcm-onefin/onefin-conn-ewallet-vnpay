@@ -6,8 +6,6 @@ import lombok.Data;
 public class VNPayConnResponse {
 
 	private String connectorCode;
-	
-	private Object Response;
-	
-	private String version;
+
+	private Object vnpayResponse;
 }

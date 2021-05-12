@@ -10,18 +10,31 @@ import lombok.Data;
 @Configuration
 @Service
 public class ConfigLoader {
-	@Value("${vnpay.onefinPrivateKey}")
+	@Value("${vnpay.airtimeTopup.onefinPrivateKey}")
 	private String onefinPrivateKey;
 
-	@Value("${vnpay.vnpayPublicKey}")
+	@Value("${vnpay.airtimeTopup.vnpayPublicKey}")
 	private String vnpayPublicKey;
 
-	@Value("${vnpay.soapUrl}")
+	@Value("${vnpay.airtimeTopup.soapUrl}")
 	private String soapUrl;
 
-	@Value("${vnpay.partnerCode}")
+	@Value("${vnpay.airtimeTopup.partnerCode}")
 	private String partnerCode;
 
+	@Value("${vnpay.smsBrandName.url}")
+	private String smsUrl;
 
+	@Value("${vnpay.smsBrandName.partnerCode}")
+	private String smsPartnerCode;
+
+	@Value("${vnpay.smsBrandName.sercretKey}")
+	private String smsSercretKey;
+
+	@Value("${vnpay.smsBrandName.keyword}")
+	private String smsKeyword;
+
+	@Value("${vnpay.smsBrandName.brandname}")
+	private String smsBrandname;
 
 }

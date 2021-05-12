@@ -7,4 +7,6 @@ public interface IHTTPRequestUtil {
 
 	TopupResponse sendTopupMobile(SoftSpaceTopupMobileReq data) throws Exception;
 
+	Object sendSMSBrandName(SMSBrandName data) throws Exception;
+
 }
