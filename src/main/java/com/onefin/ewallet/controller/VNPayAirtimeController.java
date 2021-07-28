@@ -8,6 +8,7 @@ import com.onefin.ewallet.vnpaySoapWebService.TopupResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +47,15 @@ public class VNPayAirtimeController {
 
 	}
 
+	@RequestMapping(method = RequestMethod.POST, value = "/topupmobile_v2")
+	public @ResponseBody ResponseEntity<?> topupmobileV2(@Valid @RequestBody(required = true) SoftSpaceTopupMobileReq requestBody, HttpServletRequest request) throws Exception {
+
+		LOGGER.info("=====>>>>> Calling topupmobileV2() ........");
+		vn.vnpay.vntopup.TopupResponse response = IHTTPRequestUtil.sendTopupMobileV2(requestBody);
+
+		return new ResponseEntity<>(
+				imsgUtil.build_OneFin_to_SoftSpace_TopupMobileResponseV2(response), HttpStatus.OK);
+
+	}
 
 }

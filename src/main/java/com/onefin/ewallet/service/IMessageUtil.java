@@ -10,4 +10,6 @@ public interface IMessageUtil {
 
 	VNPayConnResponse buildVNPayConnectorResponse(String code, Object data);
 
+	OneFin_to_SoftSpace_TopupMobileResponse build_OneFin_to_SoftSpace_TopupMobileResponseV2(vn.vnpay.vntopup.TopupResponse data);
+	
 }

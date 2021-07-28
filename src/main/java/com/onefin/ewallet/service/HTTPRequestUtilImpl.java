@@ -17,6 +17,7 @@ import javax.xml.namespace.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -46,6 +47,10 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	private EncryptUtil encryptUtil;
 
 	private VnpSrvSoap vnpaySoapWebService;
+	
+	@Autowired
+	@Qualifier("VnpayAirtimeService")
+	private vn.vnpay.vntopup.VnpSrvSoap vnpSrvSoap;
 
 	@Autowired
 	public IVNpayService IVNpayService;
@@ -142,4 +147,43 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 		}
 	}
 
+	@Override
+	public vn.vnpay.vntopup.TopupResponse sendTopupMobileV2(SoftSpaceTopupMobileReq data) throws Exception {
+		vn.vnpay.vntopup.TopupRequestType topupRequestType = new vn.vnpay.vntopup.TopupRequestType();
+
+		topupRequestType.setMobileNo(data.getMobileNo());
+		topupRequestType.setAmount(data.getAmount());
+		topupRequestType.setTrace(data.getTrace());
+		topupRequestType.setLocalDateTime(data.getLocalDateTime());
+		topupRequestType.setPartnerCode(configLoader.getPartnerCode());
+
+//		======================================================
+		String SignRawStr = String.format("%s-%d-%d-%s-%s", data.getMobileNo(), data.getAmount(), data.getTrace(),
+				data.getLocalDateTime(), configLoader.getPartnerCode());
+
+		String signedData = vnpaySign(SignRawStr);
+		topupRequestType.setSign(signedData);
+
+		LOGGER.debug("signedData: {}", signedData);
+//		======================================================
+
+		vn.vnpay.vntopup.Topup topup = new vn.vnpay.vntopup.Topup();
+		topup.setTopupRequest(topupRequestType);
+
+		vn.vnpay.vntopup.TopupResponse topupResponse = vnpSrvSoap.topupMobile(topup);
+
+		LOGGER.debug("TopupMobileV2 getRespCode: {}", topupResponse.getTopupReturn().getRespCode());
+		String expectResponseSignStr = String.format("%s-%s-%s-%s-%s-%s-%s",
+				topupResponse.getTopupReturn().getRespCode(), topupResponse.getTopupReturn().getMobileNo(),
+				topupResponse.getTopupReturn().getTrace(), topupResponse.getTopupReturn().getBalance(),
+				topupResponse.getTopupReturn().getAmount(), topupResponse.getTopupReturn().getLocalDateTime(),
+				topupResponse.getTopupReturn().getVnPayDateTime());
+
+		// validate signature
+		if (!verifyVNPaySignature(expectResponseSignStr, topupResponse.getTopupReturn().getSign())) {
+			LOGGER.error("== sendTopupMobileV2 Verify signature fail");
+		}
+
+		return topupResponse;
+	}
 }
