@@ -49,7 +49,7 @@ public class HTTPRequestUtilImpl implements IHTTPRequestUtil {
 	private VnpSrvSoap vnpaySoapWebService;
 	
 	@Autowired
-	@Qualifier("VnpayAirtimeService")
+	@Qualifier("vnpayTopupProxy")
 	private vn.vnpay.vntopup.VnpSrvSoap vnpSrvSoap;
 
 	@Autowired
